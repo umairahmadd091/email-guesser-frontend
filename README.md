@@ -17,7 +17,7 @@ This is the frontend for the Email Guesser application. It provides a simple UI 
 
 `npm install`
 
-### Strting Server
+### Starting Server
 
 `npm run dev`
 
