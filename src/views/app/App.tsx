@@ -20,6 +20,13 @@ const App: React.FC = () => {
     }
   };
 
+  console.log('herhehre =====> ');
+  console.log('herhehre =====> ');
+  console.log('herhehre =====> ');
+  console.log('herhehre =====> ');
+  console.log('herhehre =====> ');
+  console.log('herhehre =====> ');
+
   return (
     <div className="d-flex main">
       <div className="box">
@@ -35,6 +42,7 @@ const App: React.FC = () => {
               placeholder="Full Name"
             />
           </div>
+
           <div>
             <input
               type="text"
