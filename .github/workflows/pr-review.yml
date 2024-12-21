@@ -1,0 +1,43 @@
+name: Pull Request Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Fetch Pull Request Files
+        run: echo "${{ github.event.pull_request.head.ref }}" > pr-branch.txt
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl
+
+      - name: Call AI Model API
+        env:
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}
+        run: |
+          DIFF=$(curl -H "Accept: application/vnd.github.v3.diff" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            ${{ github.event.pull_request.url }}/files)
+          RESPONSE=$(curl -X POST https://api-inference.huggingface.co/models/BAAI/bge-reranker-v2-m3 \
+            -H "Authorization: Bearer $HF_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"inputs\": \"$DIFF\"}")
+          echo $RESPONSE > review.json
+
+      - name: Post Review Comments
+        run: |
+          COMMENTS=$(cat review.json | jq -r '.comments | .[] | "\(.path):\(.line) - \(.text)"')
+          for COMMENT in $COMMENTS; do
+            curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -d "{\"body\": \"$COMMENT\"}" \
+              ${{ github.event.pull_request.review_comments_url }}
+          done
