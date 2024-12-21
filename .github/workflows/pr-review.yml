@@ -72,20 +72,17 @@ jobs:
             exit 1
           fi
 
-      # Step 7: Post Review Comments
       - name: Post Review Comments
         run: |
-          COMMENTS=$(cat review.json | jq -r '.comments | .[] | "\(.path):\(.line) - \(.text)"')
+          # Extract the 'generated_text' from the response
+          GENERATED_TEXT=$(cat review.json | jq -r '.[0].generated_text')
+          echo "Generated Review: $GENERATED_TEXT"  # Debug
+          
+          # Post each comment from the generated text as review comments
+          COMMENTS=$(echo "$GENERATED_TEXT" | jq -r '.comments | .[] | "\(.path):\(.line) - \(.text)"')
           for COMMENT in $COMMENTS; do
             curl -X POST \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -d "{\"body\": \"$COMMENT\"}" \
               ${{ github.event.pull_request.review_comments_url }}
           done
-
-      # Step 8: Save Diff File as Artifact (Optional)
-      - name: Upload Diff as Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: pull-request-diff
-          path: all-changes.diff
