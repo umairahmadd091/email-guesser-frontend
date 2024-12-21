@@ -41,7 +41,7 @@ jobs:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: |
           # Send cleaned and escaped DIFF to the Hugging Face API
-          RESPONSE=$(curl -X POST https://api-inference.huggingface.co/models/your-model \
+          RESPONSE=$(curl -X POST https://api-inference.huggingface.co/models/Salesforce/codegen-350M-mono \
             -H "Authorization: Bearer $HF_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{\"inputs\": $ESCAPED_DIFF}")
