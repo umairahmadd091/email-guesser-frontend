@@ -49,6 +49,7 @@ jobs:
       # Step 6: Validate AI Model Response
       - name: Validate AI Model Response
         run: |
+          cat review.json
           if ! jq empty review.json; then
             echo "Error: Invalid JSON response from AI model."
             cat review.json
