@@ -34,7 +34,8 @@ jobs:
           
           # Escape the DIFF content for safe JSON input
           ESCAPED_DIFF=$(echo "$DIFF" | jq -Rs .)
-          echo "Escaped Diff: $ESCAPED_DIFF"  # Debug
+          CLEANED_RESPONSE=$(echo "$ESCAPED_DIFF" | tr -cd '\11\12\15\40-\176')
+          echo "Escaped Diff: $CLEANED_RESPONSE"  # Debug
 
       - name: Call AI Model API
         env:
@@ -44,7 +45,7 @@ jobs:
           RESPONSE=$(curl -X POST https://api-inference.huggingface.co/models/Salesforce/codegen-350M-mono \
             -H "Authorization: Bearer $HF_API_KEY" \
             -H "Content-Type: application/json" \
-            -d "{\"inputs\": $ESCAPED_DIFF}")
+            -d "{\"inputs\": $CLEANED_RESPONSE}")
           
           # Save the response to a file for debugging
           echo "Raw Response: $RESPONSE"  # Debugging the raw response
