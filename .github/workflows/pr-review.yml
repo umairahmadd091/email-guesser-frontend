@@ -42,7 +42,7 @@ jobs:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: |
           # Send cleaned and escaped DIFF to the Hugging Face API
-          RESPONSE=$(curl -X POST https://api-inference.huggingface.co/models/Salesforce/codegen-350M-mono \
+          RESPONSE=$(curl -X POST https://api-inference.huggingface.co/models/facebook/bart-large-cnn \
             -H "Authorization: Bearer $HF_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{\"inputs\": $CLEANED_RESPONSE}")
@@ -60,7 +60,7 @@ jobs:
           fi
           
           # Parse the 'generated_text' from the valid JSON response
-          GENERATED_TEXT=$(cat review.json | jq -r '.[0].generated_text')
+          GENERATED_TEXT=$(cat review.json | jq -r '.[0].summary_text')
           echo "Generated Review: $GENERATED_TEXT"  # Debug
           
           # Post each comment from the generated text as review comments
