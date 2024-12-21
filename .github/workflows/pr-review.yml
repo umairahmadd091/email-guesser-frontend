@@ -19,6 +19,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq curl
 
+      - name: Debug GitHub API Response
+        run: |
+          curl -H "Accept: application/vnd.github.v3.diff" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            ${{ github.event.pull_request.url }}/files \
+            -o pr-diff.diff
+          cat pr-diff.diff
+
       - name: Call AI Model API
         env:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
