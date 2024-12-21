@@ -47,15 +47,18 @@ jobs:
             -d "{\"inputs\": $ESCAPED_DIFF}")
           
           # Save the response to a file for debugging
+          echo "Raw Response: $RESPONSE"  # Debugging the raw response
           echo $RESPONSE > review.json
 
-      - name: display review
+      - name: Check and Parse Response
         run: |
-          cat review.json
-
-      - name: Post Review Comments
-        run: |
-          # Extract the 'generated_text' from the response
+          # Check if the response is valid JSON
+          if ! echo "$RESPONSE" | jq empty; then
+            echo "Invalid JSON response: $RESPONSE"
+            exit 1
+          fi
+          
+          # Parse the 'generated_text' from the valid JSON response
           GENERATED_TEXT=$(cat review.json | jq -r '.[0].generated_text')
           echo "Generated Review: $GENERATED_TEXT"  # Debug
           
