@@ -44,7 +44,7 @@ jobs:
           RETRY_COUNT=0
           SLEEP_INTERVAL=30
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            RESPONSE=$(curl -X POST https://api-inference.huggingface.co/models/BAAI/bge-reranker-v2-m3 \
+            RESPONSE=$(curl -X POST https://api-inference.huggingface.co/models/microsoft/codebert-base \
               -H "Authorization: Bearer $HF_API_KEY" \
               -H "Content-Type: application/json" \
               -d "{\"inputs\": \"$DIFF\"}")
