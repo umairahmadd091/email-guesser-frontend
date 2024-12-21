@@ -24,3 +24,5 @@ This is the frontend for the Email Guesser application. It provides a simple UI 
 ### Running tests
 
 `npm run test`
+
+### testing github actions
