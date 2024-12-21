@@ -8,38 +8,54 @@ jobs:
   ai-review:
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Fetch Pull Request Files
-        run: echo "${{ github.event.pull_request.head.ref }}" > pr-branch.txt
-
+      # Step 2: Install Dependencies
       - name: Install Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y jq curl
 
-      - name: Debug GitHub API Response
+      # Step 3: Fetch Pull Request Diff
+      - name: Fetch Pull Request Diff
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl -H "Accept: application/vnd.github.v3.diff" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            ${{ github.event.pull_request.url }}/files \
-            -o pr-diff.diff
-          cat pr-diff.diff
+            -H "Authorization: token $GITHUB_TOKEN" \
+            ${{ github.event.pull_request.url }} \
+            -o all-changes.diff
 
+      # Step 4: Log Diff Content (for debugging)
+      - name: Log All Changes
+        run: |
+          echo "Consolidated Changes:"
+          cat all-changes.diff
+
+      # Step 5: Call AI Model API
       - name: Call AI Model API
         env:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: |
-          DIFF=$(curl -H "Accept: application/vnd.github.v3.diff" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            ${{ github.event.pull_request.url }}/files)
+          DIFF=$(cat all-changes.diff)
           RESPONSE=$(curl -X POST https://api-inference.huggingface.co/models/BAAI/bge-reranker-v2-m3 \
             -H "Authorization: Bearer $HF_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{\"inputs\": \"$DIFF\"}")
           echo $RESPONSE > review.json
 
+      # Step 6: Validate AI Model Response
+      - name: Validate AI Model Response
+        run: |
+          if ! jq empty review.json; then
+            echo "Error: Invalid JSON response from AI model."
+            cat review.json
+            exit 1
+          fi
+
+      # Step 7: Post Review Comments
       - name: Post Review Comments
         run: |
           COMMENTS=$(cat review.json | jq -r '.comments | .[] | "\(.path):\(.line) - \(.text)"')
@@ -49,3 +65,10 @@ jobs:
               -d "{\"body\": \"$COMMENT\"}" \
               ${{ github.event.pull_request.review_comments_url }}
           done
+
+      # Step 8: Save Diff File as Artifact (Optional)
+      - name: Upload Diff as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: pull-request-diff
+          path: all-changes.diff
